@@ -3,10 +3,18 @@
 # dependencies
 /node_modules
 /.pnp
-.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/.playwright-mcp/
 
 # next.js
 /.next/
@@ -18,15 +26,20 @@
 # misc
 .DS_Store
 *.pem
+.mcp.json
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# local env files
-.env*.local
-.env
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+
+# project implementation notes
+CLAUDE.md
 
 # vercel
 .vercel
