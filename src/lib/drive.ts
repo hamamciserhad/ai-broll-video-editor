@@ -1,6 +1,6 @@
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
-import { Readable } from "stream";
+import { Readable, Transform } from "stream";
 
 const MAX_FILE_BYTES = 500 * 1024 * 1024; // 500 MB guard
 
@@ -50,7 +50,9 @@ export async function downloadDriveFile(
     );
   }
 
-  // Guard against oversized files
+  // Fast-path: reject immediately if Content-Length is provided and over limit.
+  // Google Drive uses chunked transfer encoding on most responses, so this
+  // header is often absent — the in-stream guard below covers that case.
   const contentLength = response.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > MAX_FILE_BYTES) {
     throw new Error(
@@ -60,9 +62,28 @@ export async function downloadDriveFile(
 
   if (!response.body) throw new Error("No response body from Drive API");
 
+  // In-stream byte counter: aborts the download the moment we exceed the cap,
+  // regardless of whether the server sent a Content-Length header.
+  let bytesSeen = 0;
+  const sizeGuard = new Transform({
+    transform(chunk: Buffer, _enc, cb) {
+      bytesSeen += chunk.length;
+      if (bytesSeen > MAX_FILE_BYTES) {
+        cb(
+          new Error(
+            `File exceeds the 500 MB size limit (download aborted at ${Math.round(bytesSeen / 1024 / 1024)} MB).`
+          )
+        );
+      } else {
+        cb(null, chunk);
+      }
+    },
+  });
+
   const fileStream = createWriteStream(destPath);
   await pipeline(
     Readable.fromWeb(response.body as import("stream/web").ReadableStream),
+    sizeGuard,
     fileStream
   );
 }

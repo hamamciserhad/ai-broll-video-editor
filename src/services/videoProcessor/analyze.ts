@@ -1,4 +1,5 @@
-import { readFile, unlink } from "fs/promises";
+import { createReadStream } from "fs";
+import { unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -88,12 +89,14 @@ export async function processVideo(
       await overlayBRoll(mainPath, brollItems, outputPath);
 
       // ── Step 6: upload to Supabase Storage ────────────────────────────
-      const fileBuffer = await readFile(outputPath);
+      // Stream directly from disk instead of buffering the whole file in heap
+      // (a 200 MB output would otherwise risk OOM on Railway's free tier).
+      const fileStream = createReadStream(outputPath);
       const storagePath = `${userId}/${videoId}/output.mp4`;
 
       const { error: uploadError } = await supabase.storage
         .from("videos")
-        .upload(storagePath, fileBuffer, {
+        .upload(storagePath, fileStream, {
           contentType: "video/mp4",
           upsert: true,
         });

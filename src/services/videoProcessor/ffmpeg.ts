@@ -124,10 +124,23 @@ export async function overlayBRoll(
   if (!ffmpegPath) throw new Error("FFmpeg binary not found (ffmpeg-static)");
   if (!brollItems.length) throw new Error("No B-Roll items to overlay");
 
+  // Drop any cue where end_time ≤ start_time (Gemini occasionally hallucinates
+  // inverted timestamps; passing a negative trim duration to FFmpeg is fatal).
+  const validItems = brollItems.filter(({ cue }) => {
+    const valid = timestampToSeconds(cue.end_time) > timestampToSeconds(cue.start_time);
+    if (!valid) {
+      console.warn(
+        `[ffmpeg] Dropping cue with non-positive window: ${cue.start_time}–${cue.end_time}`
+      );
+    }
+    return valid;
+  });
+  if (!validItems.length) throw new Error("All B-Roll cues are invalid (end_time ≤ start_time)");
+
   // Get main video info and each B-Roll clip's info in parallel
   const [mainInfo, ...clipInfos] = await Promise.all([
     getVideoInfo(mainPath),
-    ...brollItems.map(({ clipPath }) => getVideoInfo(clipPath)),
+    ...validItems.map(({ clipPath }) => getVideoInfo(clipPath)),
   ]);
 
   const { width, height, fps: mainFps, duration: mainDuration } = mainInfo;
@@ -141,7 +154,7 @@ export async function overlayBRoll(
     `pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`;
 
   // Sort cues by start time to guarantee correct concat order
-  const sorted = brollItems
+  const sorted = validItems
     .map((item, originalIdx) => ({ item, originalIdx }))
     .sort(
       (a, b) =>
@@ -149,7 +162,10 @@ export async function overlayBRoll(
         timestampToSeconds(b.item.cue.start_time)
     );
 
-  // Plan the segment list: alternating main-video gaps and B-Roll clips
+  // Plan the segment list: alternating main-video gaps and B-Roll clips.
+  // Overlapping cues (start_time < previous end_time) are dropped — keeping
+  // them would make the output video longer than the original audio, causing
+  // the -t cap to silently chop the tail of the video.
   type MainSeg = { kind: "main"; start: number; end: number };
   type BRollSeg = { kind: "broll"; sortedIdx: number };
   const segments: (MainSeg | BRollSeg)[] = [];
@@ -158,6 +174,13 @@ export async function overlayBRoll(
   for (let i = 0; i < sorted.length; i++) {
     const startSec = timestampToSeconds(sorted[i].item.cue.start_time);
     const endSec = timestampToSeconds(sorted[i].item.cue.end_time);
+    if (startSec < cursor - 0.01) {
+      console.warn(
+        `[ffmpeg] Dropping overlapping cue at ${sorted[i].item.cue.start_time} ` +
+          `(previous cue ends at ${cursor.toFixed(3)}s)`
+      );
+      continue;
+    }
     if (startSec > cursor + 0.01) {
       segments.push({ kind: "main", start: cursor, end: startSec });
     }

@@ -28,9 +28,18 @@ export async function uploadVideoToGemini(
     displayName,
   });
 
-  // Poll until the file is processed (Gemini needs to transcode it)
+  // Poll until the file is processed (Gemini needs to transcode it).
+  // Cap at 100 attempts (~5 minutes) to prevent an infinite hang if the
+  // File API gets stuck in PROCESSING due to an outage or corrupt upload.
+  const MAX_POLLS = 100;
+  let polls = 0;
   let file = await fileManager.getFile(uploadedFile.name);
   while (file.state === FileState.PROCESSING) {
+    if (++polls > MAX_POLLS) {
+      throw new Error(
+        "Gemini File API: timed out waiting for video to process (>5 min)"
+      );
+    }
     await new Promise((r) => setTimeout(r, 3_000));
     file = await fileManager.getFile(uploadedFile.name);
   }
@@ -46,7 +55,7 @@ export async function uploadVideoToGemini(
 }
 
 /**
- * Calls Gemini 1.5 Pro with a video file URI and returns structured B-Roll
+ * Calls Gemini 2.5 Flash with a video file URI and returns structured B-Roll
  * cues as JSON, enforced via responseSchema.
  */
 export async function analyzeVideoForBRoll(

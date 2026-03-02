@@ -2,14 +2,14 @@
 
 **An AI agent that automatically splices relevant B-Roll into talking-head videos.**
 
-Paste a Google Drive link to your raw video. Gemini 1.5 Pro analyzes it, identifies the top 3–5 moments where B-Roll would boost engagement, sources matching stock clips from Pexels, and FFmpeg overlays them — all without touching a timeline editor.
+Paste a Google Drive link to your raw video. Gemini 2.5 Flash analyzes it, identifies the top 3–5 moments where B-Roll would boost engagement, sources matching stock clips from Pexels, and FFmpeg overlays them — all without touching a timeline editor.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com)
-[![Gemini](https://img.shields.io/badge/Gemini-1.5_Pro-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-static-007808?logo=ffmpeg&logoColor=white)](https://ffmpeg.org)
 [![Pexels](https://img.shields.io/badge/Pexels-Stock_Video-05A081)](https://www.pexels.com/api)
 [![Playwright](https://img.shields.io/badge/Playwright-E2E-45BA4B?logo=playwright&logoColor=white)](https://playwright.dev)
@@ -27,7 +27,7 @@ flowchart LR
     ST[("Supabase\nStorage")]
     RW["Railway\nWorker"]
     GD["Google\nDrive API"]
-    GM["Gemini\n1.5 Pro\nFile API"]
+    GM["Gemini\n2.5 Flash\nFile API"]
     PX["Pexels\nAPI"]
     FF["FFmpeg\n(local binary)"]
 
@@ -52,7 +52,7 @@ flowchart LR
 ## Features
 
 - **Zero-touch editing** — submit a link, receive a finished video.
-- **AI-powered cue detection** — Gemini 1.5 Pro identifies the exact timestamps where B-Roll adds the most value, returning structured JSON with `start_time`, `end_time`, and a precise `visual_description` for each cue.
+- **AI-powered cue detection** — Gemini 2.5 Flash identifies the exact timestamps where B-Roll adds the most value, returning structured JSON with `start_time`, `end_time`, and a precise `visual_description` for each cue.
 - **Automatic stock footage** — each cue is matched to a relevant Pexels video clip (HD preferred), downloaded and overlaid automatically.
 - **Frame-accurate overlay** — FFmpeg letterboxes B-Roll to match the main video's resolution, activating each clip only during its cue window.
 - **Async worker pattern** — long-running processing runs on a persistent Railway worker, keeping the Next.js app fast and within serverless limits.
@@ -72,7 +72,7 @@ flowchart LR
 | Styling | Tailwind CSS + shadcn/ui | v4 |
 | Database & Auth | Supabase (PostgreSQL + Auth) | `@supabase/supabase-js` 2.98.0 |
 | SSR Auth | `@supabase/ssr` | 0.8.0 |
-| AI Analysis | Google Gemini 1.5 Pro | `@google/generative-ai` 0.24.1 |
+| AI Analysis | Google Gemini 2.5 Flash | `@google/generative-ai` 0.24.1 |
 | Video source | Google Drive API v3 | — |
 | Stock footage | Pexels API | — |
 | Video processing | FFmpeg + FFprobe (static) | `ffmpeg-static` 5.3.0 |

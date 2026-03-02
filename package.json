@@ -10,7 +10,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "worker:start": "tsx worker/index.ts"
+    "worker:start": "tsx --env-file=.env.local worker/index.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
