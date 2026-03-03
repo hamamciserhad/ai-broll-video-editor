@@ -4,6 +4,8 @@
 
 Paste a Google Drive link to your raw video. Gemini 2.5 Flash analyzes it, identifies the top 3–5 moments where B-Roll would boost engagement, sources matching stock clips from Pexels, and FFmpeg overlays them — all without touching a timeline editor.
 
+🔗 **Live Demo:** [ai-broll-video-editor-deploy.vercel.app](https://ai-broll-video-editor-deploy.vercel.app)
+
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
